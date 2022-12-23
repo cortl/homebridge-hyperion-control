@@ -54,7 +54,7 @@ class Hyperion {
         const { url } = this;
 
         const { data } = await axios.post(url, { command: "serverinfo" });
-        const status = data.info.components.findComponentByName(LEDDEVICE).enabled;
+        const status = data.info.components.find(findComponentByName(LEDDEVICE))?.enabled;
 
         return Boolean(status)
             ? 1

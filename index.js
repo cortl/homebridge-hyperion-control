@@ -4,12 +4,10 @@ const Color = require('color');
 const wait = async (timeToDelay) => new Promise((resolve) => setTimeout(resolve, timeToDelay));
 
 module.exports = (api) => {
-    api.registerAccessory('homebridge-hyperion-control', 'Hyperion', Hyperion);
+    api.registerAccessory('homebridge-hyperion-service', 'Hyperion', Hyperion);
 }
 
 const LEDDEVICE = 'LEDDEVICE'
-
-const findComponentByName = (name) => (component) => component.name === name
 
 class Hyperion {
     constructor(log, config, api) {
@@ -54,7 +52,7 @@ class Hyperion {
         const { url } = this;
 
         const { data } = await axios.post(url, { command: "serverinfo" });
-        const status = data.info.components.find(findComponentByName(LEDDEVICE))?.enabled;
+        const status = data.info.components.find((component) => component.name === LEDDEVICE)?.enabled;
 
         return Boolean(status)
             ? 1

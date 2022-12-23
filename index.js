@@ -66,7 +66,7 @@ class Hyperion {
         const { data } = await axios.post(url, {
             command: "componentstate",
             componentstate: {
-                component: "ALL",
+                component: LEDDEVICE,
                 state: value
             }
         });

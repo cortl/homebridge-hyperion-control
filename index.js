@@ -7,6 +7,10 @@ module.exports = (api) => {
     api.registerAccessory('homebridge-hyperion-control', 'Hyperion', Hyperion);
 }
 
+const LEDDEVICE = 'LEDDEVICE'
+
+const findComponentByName = (name) => (component) => component.name === name
+
 class Hyperion {
     constructor(log, config, api) {
         this.log = log;
@@ -47,10 +51,10 @@ class Hyperion {
 
     async handleOnGet() {
         this.log.debug('Triggered GET On');
-        const {url} = this;
+        const { url } = this;
 
-        const {data} = await axios.post(url, {command: "serverinfo"});
-        const status = data.info.components[0].enabled;
+        const { data } = await axios.post(url, { command: "serverinfo" });
+        const status = data.info.components.findComponentByName(LEDDEVICE).enabled;
 
         return Boolean(status)
             ? 1
@@ -59,16 +63,16 @@ class Hyperion {
 
     async handleOnSet(value) {
         this.log.debug('Triggered SET On:', value);
-        const {url} = this;
+        const { url } = this;
 
-        const {data} = await axios.post(url, {
+        const { data } = await axios.post(url, {
             command: "componentstate",
             componentstate: {
                 component: "ALL",
                 state: value
             }
         });
-        const {success} = data;
+        const { success } = data;
 
         if (!success) {
             this.log.error(`Failed to set the state to: ${value}`);
@@ -77,24 +81,24 @@ class Hyperion {
 
     async handleBrightnessGet() {
         this.log.debug('Triggered GET On');
-        const {url} = this;
+        const { url } = this;
 
-        const {data} = await axios.post(url, {"command": "serverinfo"});
-        const {brightness} = data.info.adjustment[0];
+        const { data } = await axios.post(url, { "command": "serverinfo" });
+        const { brightness } = data.info.adjustment[0];
 
-        this.service.getCharacteristic(this.Characteristic.Brightness).updateValue(brightness);
+        this.service.getCharacteristic(this.Characteristic.Brightness).updateValue(brightness ?? 0);
     }
 
     async handleBrightnessSet(value) {
-        const {url} = this;
+        const { url } = this;
 
-        const {data} = await axios.post(url, {
+        const { data } = await axios.post(url, {
             command: "adjustment",
             adjustment: {
                 brightness: value
             }
         });
-        const {success} = data;
+        const { success } = data;
 
         if (!success) {
             this.log.error(`Failed to set the brightness to: ${value}`);
@@ -124,18 +128,18 @@ class Hyperion {
 
     async handleSaturationSet(level) {
         await wait(100);
-        const {url, priority} = this;
+        const { url, priority } = this;
         const newColor = Color(this.color).saturationv(level);
 
         this.log.debug(`Setting saturation to: ${level}`)
 
-        const {data} = await axios.post(url, {
+        const { data } = await axios.post(url, {
             command: "color",
             priority,
             color: newColor.rgb().round().array()
         });
 
-        const {success} = data;
+        const { success } = data;
 
         if (!success) {
             this.log.error(`Failed to set the saturation to: ${level}`);
